@@ -39,8 +39,9 @@ class Server {
     constructor() {
         //create expressjs application
         this.app = express();
-        this.app.use(bodyParser.json());
+        this.app.use(bodyParser.raw({type: "*/*"}));  
     }
+
     /**
      * Configure the server.  You should only call this once.
      *

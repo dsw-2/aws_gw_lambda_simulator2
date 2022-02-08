@@ -18,7 +18,7 @@ const API_GW = require('aws_gw_lambda_simulator');
 
 let server = new API_GW.Server();
 let routes = [
-    { verb: "GET", filepath: __dirname + '/echo', route: '/echo' }
+    { verb: "GET", filepath: __dirname + '/echo', route: '/echo', options: {} }
 ];
 
 server.config(routes);
@@ -70,7 +70,7 @@ The value of `:id` will be supplied in `event.pathParameters.id`, just as they w
             "accept-encoding": "gzip, deflate",
             "connection": "keep-alive"
         },
-        "body": {}
+        "body": <json object or raw input, see route options>
     },
     "context": {}
 }
@@ -120,7 +120,12 @@ The `config` method requires an array of `lambdaRoute`s.  Each one of these must
 
 Each `lambdaRoute` may optionally contain an `options` object of type `gwOptions`.  Presently it supports:
 
+* `json`
+    * true: parse request body input data as JSON and set event.body to an object (default)
+    * false: do not parse request body input, set event.body to raw utf8 string
+  
 * `x_api_key` - an optional string value to be required to simulate the API Key functionality of API Gateway.  When a value is supplied, the exact value must be provided by the caller of the web service in the header `x-api-key`.  If `x-api-key` is either not provided, or is not the same value specified in the `x_api_key` property, the framework will not execute your lambda, and instead return a 403 error, along with the simple payload of "Forbidden".  Keep in mind, the scaffold spins up an unencrypted HTTP site, _not_ one protected by HTTPS, so do not use this key to protect services without using an external HTTPS endpoint to proxy the request - otherwise your `x-api-key` could be read by network sniffers.
+  
 * `tokenAuthorizer` - an optional object that can specify an "authorizer" lambda.  See below for more information.  A valid `tokenAuthorizer` consists of two values:
   * `filepath` - the path to the entry point file for your Lambda. This field operates exactly the same way as the `filepath` field to the target lambda operates.
   * `header_key` - the name of the http header that is expected to contain the authorization token.  This will be passed into the authorizer lambda `event` object as `authorizationToken`, just like in the real AWS environment.

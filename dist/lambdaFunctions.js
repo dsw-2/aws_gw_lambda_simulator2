@@ -21,13 +21,15 @@ const url = require("url");
 // A wrapper function to handle the basic input/output for a lambda
 async function Wrapper(lambda, verb, req, res, options) 
 {
-    if (options && options.x_api_key && !(options.x_api_key === req.get("x-api-key"))) {
+    options = options || {};
+
+    if (options.x_api_key && !(options.x_api_key === req.get("x-api-key"))) {
         let r = res.status(403);
         r.send("Forbidden");
         return r;
     }
 
-    const { event, context } = Mapper(verb, req);
+    const { event, context } = Mapper(verb, req, options.json);
 
     if (options && options.tokenAuthorizer) 
     {
@@ -78,9 +80,19 @@ exports.mockEvent = mockEvent;
 class mockAuthorizationEvent {
 }
 // Mimic the subset of the event and context objects created by AWS' Lambda Proxy for the specified request (req)
-function Mapper(verb, req) {
+function Mapper(verb, req, json=true) {
     const context = new mockContext();
     const event = new mockEvent();
+
+      // the bodyParser.raw() middleware sets req.body={} (empty object) if there is not input body.
+      // check for Buffer before trying to use it.
+    let body = undefined;
+    if (req.body instanceof Buffer)
+    {
+      body = req.body.toString("utf8");
+      if (json) body = JSON.parse(body);
+    }
+
     Object.assign(event, {
         resource: req.route.path,
         path: url.parse(req.url).pathname,
@@ -88,7 +100,7 @@ function Mapper(verb, req) {
         pathParameters: Object.getOwnPropertyNames(req.params).length > 0 ? req.params : null,
         httpMethod: verb,
         headers: Object.getOwnPropertyNames(req.headers).length > 0 ? req.headers : null,
-        body: req.body
+        body: body
     });
     return ({ context, event });
 }
