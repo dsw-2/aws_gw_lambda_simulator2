@@ -94,14 +94,42 @@ function Mapper(verb, req, json=true) {
     }
 
     Object.assign(event, {
+        version: "2.0",
+        routeKey: `${verb} ${req.route.path}`,
+        rawPath: req.path,
+        rawQueryString: req._parsedUrl.query,
+        cookies: [], // ToDo
+        headers: Object.getOwnPropertyNames(req.headers).length > 0 ? req.headers : null,
+        queryStringParameters: Object.getOwnPropertyNames(req.query).length > 0 ? req.query : null,
+        requestContext: {
+         accountId: "000000000000",  
+         apiId: "0000000000",
+         authorizer: { jwt: "<not implemented" },
+         domainName: req._parsedUrl.hostname,
+         domainPrefix: req._parsedUrl.hostname,
+         http: {
+           method: verb,
+           path: req.path,
+           protocol: `${req.protocol.toUpperCase()}/${req.httpVersion}`, //'HTTP/1.1'
+           sourceIp: "0.0.0.0",
+           userAgent: "UserAgent/1.1.1"
+         },
+         requestId: "1111111111111111",
+         routeKey: `${verb} ${req.route.path}`,
+         stage: "default",
+         time: (new Date()).toISOString(),    // '14/Feb/2022:20:54:16 +0000' 
+         timeEpoch: Date.now()
+        },
+        pathParameters: Object.getOwnPropertyNames(req.params).length > 0 ? req.params : null,
+        isBase64Encoded: false,
+
         resource: req.route.path,
         path: url.parse(req.url).pathname,
-        queryStringParameters: Object.getOwnPropertyNames(req.query).length > 0 ? req.query : null,
-        pathParameters: Object.getOwnPropertyNames(req.params).length > 0 ? req.params : null,
         httpMethod: verb,
-        headers: Object.getOwnPropertyNames(req.headers).length > 0 ? req.headers : null,
         body: body
     });
     return ({ context, event });
 }
 exports.Mapper = Mapper;
+
+
